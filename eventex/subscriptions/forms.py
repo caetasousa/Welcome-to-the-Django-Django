@@ -4,14 +4,27 @@ from django.core.exceptions import ValidationError
 
 def validate_cpf(value):
     if not value.isdigit():
-        raise ValidationError('CPF deve conter apenas numeros')
+        raise ValidationError('CPF deve conter apenas numeros.')
 
     if len(value) != 11:
-        raise ValidationError('CPF deve conter 11 digitos')
+        raise ValidationError('CPF deve conter 11 digitos.')
 
 
 class SubscriptionForm(forms.Form):
     name = forms.CharField(label='Nome')
     cpf = forms.CharField(label='CPF', validators=[validate_cpf])
-    email = forms.EmailField(label='Email')
-    phone = forms.CharField(label='Telefone')
+    email = forms.EmailField(label='Email', required=False)
+    phone = forms.CharField(label='Telefone', required=False)
+
+    def clean_name(self):
+        nome = self.cleaned_data['name']
+        words = []
+        for w in nome.split():
+            words.append(w.capitalize())
+        capitalized_name = ' '.join(words)
+        return capitalized_name
+
+    def clean(self):
+        if not self.cleaned_data.get('email') and not self.cleaned_data.get('phone'):
+            raise ValidationError('Informe seu e-mail ou telefone.')
+        return self.cleaned_data
